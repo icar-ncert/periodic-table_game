@@ -1,0 +1,559 @@
+/* General Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #1a1a1a;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+#game-container {
+    background: rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin: 0 auto;
+    max-width: 1400px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Typography and Subtle Shadow */
+h1, h3 {
+    font-weight: 700;
+    color: #1a1a1a;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.glow-text {
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Pastel Accent Colors */
+.pastel-green { color: #2e7d32; }
+.pastel-blue { color: #0277bd; }
+.pastel-purple { color: #6a1b9a; }
+.neon-green { color: #2e7d32; }
+.neon-blue { color: #0277bd; }
+.neon-purple { color: #6a1b9a; }
+
+/* Role Selection, Individual Mode, and Inputs */
+#role-selection, #teacher-controls, #student-join, #teacher-leaderboard, #individual-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.form-control {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 8px rgba(46, 125, 50, 0.5);
+    border-color: #2e7d32;
+}
+
+#room-code-display, #student-list {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* Question Display */
+#question-display {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    min-height: 60px;
+    font-weight: 600;
+}
+
+/* Leaderboard */
+.leaderboard-table {
+    background: linear-gradient(135deg, #ffffff, #e3f2fd);
+    border-radius: 12px;
+    overflow: hidden;
+    width: 80%;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+#teacher-leaderboard .leaderboard-table {
+    background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+}
+
+.leaderboard-table th, .leaderboard-table td {
+    padding: 1rem;
+    text-align: center;
+    font-size: 1.1rem;
+    border: none;
+}
+
+.leaderboard-table th {
+    background: rgba(0, 0, 0, 0.05);
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.leaderboard-row {
+    transition: all 0.3s ease;
+}
+
+.leaderboard-row:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.user-row {
+    background: rgba(129, 199, 132, 0.2);
+    font-weight: 600;
+}
+
+.rank-badge {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    border-radius: 50%;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+}
+
+.rank-1 { background: #ffd700; } /* Gold */
+.rank-2 { background: #c0c0c0; } /* Silver */
+.rank-3 { background: #cd7f32; } /* Bronze */
+
+.slide-in {
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Difficulty Select and Buttons */
+.form-select.modern-select {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-select.modern-select:focus {
+    box-shadow: 0 0 8px rgba(46, 125, 50, 0.5);
+    border-color: #2e7d32;
+}
+
+.modern-btn {
+    background: linear-gradient(45deg, #a5d6a7, #81d4fa);
+    color: #1a1a1a;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.modern-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 12px rgba(46, 125, 50, 0.3);
+}
+
+.modern-btn:focus {
+    outline: 2px solid #2e7d32;
+    outline-offset: 2px;
+}
+
+#stop-quiz-btn {
+    background: linear-gradient(45deg, #ef9a9a, #f44336);
+}
+
+#resume-quiz-btn {
+    background: linear-gradient(45deg, #a5d6a7, #4caf50);
+}
+
+#finish-quiz-btn {
+    background: linear-gradient(45deg, #ffcc80, #ff9800);
+}
+
+#publish-leaderboard-btn {
+    background: linear-gradient(45deg, #ce93d8, #ab47bc);
+}
+
+#next-question-btn {
+    background: linear-gradient(45deg, #4fc3f7, #0288d1);
+}
+
+/* Stats Bar for Students */
+.stats-bar {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stat {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Progress Bar for Students */
+#progress-bar {
+    background: grid;
+    border-radius: 10px;
+    height: 10px;
+    overflow: hidden;
+    margin: 1rem 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+#progress {
+    background: linear-gradient(90deg, #a5d6a7, #81d4fa);
+    height: 100%;
+    width: 0;
+    transition: width 0.5s ease;
+}
+
+/* Draggable Area for Students */
+#draggable-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 1.5rem;
+    background: linear-gradient(45deg, #f5f5f5, #e0f7fa);
+    border-radius: 12px;
+    min-height: 120px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+/* Medium Mode Completion */
+.completed {
+    background: rgba(129, 199, 132, 0.5);
+    border: 2px solid #4caf50;
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Periodic Table */
+#periodic-table {
+    display: grid;
+    grid-template-rows: repeat(7, 80px) 20px repeat(2, 100px);
+    grid-template-columns: repeat(18, minmax(0, 1fr));
+    gap: 4px;
+    width: 100%;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #000000;
+}
+
+.row-gap {
+    grid-row: 8;
+    grid-column: 1 / -1;
+    height: 20px;
+}
+
+.group-numbers {
+    display: grid;
+    grid-template-columns: repeat(18, minmax(0, 1fr));
+    gap: 4px;
+    padding: 10px 10px 0 10px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.group-numbers div {
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+.period-numbers {
+    position: absolute;
+    top: 40px;
+    left: -40px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.period-number {
+    width: 30px;
+    height: 80px;
+    line-height: 80px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+/* Element Styles */
+.element {
+    position: relative;
+    padding: 4px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+    overflow: hidden;
+    z-index: 1;
+    touch-action: none;
+}
+
+.element.draggable {
+    width: 90px;
+    height: 90px;
+    z-index: 100;
+    transition: transform 0.2s ease;
+}
+
+.element.dragging {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
+}
+
+.element.droppable {
+    background: rgba(0, 0, 0, 0.05);
+    border: 2px dashed #0288d1;
+}
+
+.element.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+    pointer-events: none;
+}
+
+.element .number {
+    font-size: 10px;
+    font-weight: bold;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+.element .symbol {
+    font-size: 20px;
+    font-weight: bold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.element .atomic-mass {
+    font-size: 9px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+}
+
+/* Feedback Animations */
+.correct {
+    background-color: rgba(0, 255, 0, 0.2) !important;
+    border-color: #81c784 !important;
+    animation: bounce 0.5s ease;
+}
+
+.wrong {
+    background: rgba(255, 0, 0, 0.2) !important;
+    border-color: #e57373 !important;
+    animation: shake 0.3s ease;
+}
+
+.highlight-correct {
+    border: 4px solid #66bb6a !important;
+    background: rgba(0, 255, 0, 0.2) !important;
+    z-index: 2;
+}
+
+/* Group-Block Backgrounds */
+.group-block-nonmetal { background-color: #ffcc99; }
+.group-block-noble-gas { background-color: #f399b7; }
+.group-block-alkali-metal { background-color: #ff9999; }
+.group-block-alkaline-earth-metal { background-color: #99ccff; }
+.group-block-halogen { background-color: #99ffcc; }
+.group-block-metalloid { background-color: #99eeff; }
+.group-block-post-transition-metal { background-color: #c6e9f9; }
+.group-block-transition-metal { background-color: #ffcece; }
+.group-block-lanthanide { background-color: #fd3c11; }
+.group-block-actinide { background-color: #f5c2da; }
+
+/* Easy Mode Specific Colors */
+.easy-mode .hydrogen-block {
+    background-color: #fff59d !important;
+}
+.easy-mode .helium-block {
+    background-color: #80deea !important;
+}
+.easy-mode .group-block-alkaline-earth-metal {
+    background-color: #ffccbc !important;
+}
+
+/* Animations */
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 767px) {
+    #game-container {
+        padding: 10px;
+    }
+    #periodic-table {
+        grid-template-columns: repeat(18, minmax(50px, 1fr));
+        grid-template-rows: repeat(7, 60px) 15px repeat(2, 60px);
+        gap: 2px;
+        padding: 8px;
+    }
+    .row-gap {
+        height: 15px;
+    }
+    .element {
+        height: 60px;
+    }
+    .element.draggable {
+        width: 60px;
+        height: 60px;
+    }
+    .element .symbol {
+        font-size: 14px;
+    }
+    .element .number, .element .atomic-mass {
+        font-size: 8px;
+    }
+    .group-numbers {
+        grid-template-columns: repeat(18, minmax(40px, 1fr));
+        gap: 2px;
+        padding: 8px 2px 0 2px;
+    }
+    .group-numbers div, .period-number {
+        font-size: 0.8rem;
+    }
+    .period-numbers {
+        left: 0px;
+        top: 34px;
+        gap: 0px;
+    }
+    .period-number {
+        width: 20px;
+        height: 60px;
+        line-height: 60px;
+    }
+    #draggable-container {
+        min-height: 80px;
+        gap: 8px;
+        padding: 1rem;
+    }
+    #question-display {
+        font-size: 1rem;
+        padding: 8px;
+    }
+    .leaderboard-table {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #periodic-table {
+        grid-template-columns: repeat(18, minmax(40px, 1fr));
+        grid-template-rows: repeat(7, 50px) 10px repeat(2, 50px);
+        gap: 2px;
+        padding: 6px;
+    }
+    .row-gap {
+        height: 10px;
+    }
+    .element {
+        height: 50px;
+    }
+    .element.draggable {
+        width: 50px;
+        height: 50px;
+    }
+    .element .symbol {
+        font-size: 12px;
+    }
+    .element .number, .element .atomic-mass {
+        font-size: 10px;
+    }
+    .group-numbers {
+        grid-template-columns: repeat(18, minmax(40px, 1fr));
+        gap: 2px;
+        padding: 6px 2px 0;
+    }
+    .group-numbers div, .period-number {
+        font-size: 0.7rem;
+    }
+    .period-numbers {
+        left: 0px;
+        top: 30px;
+        gap: 2px;
+    }
+    .period-number {
+        width: 20px;
+        height: 50px;
+        line-height: 50px;
+    }
+    #draggable-container {
+        min-height: 100px;
+        gap: 6px;
+        padding: 0.5rem;
+    }
+    #question-display {
+        font-size: 0.9rem;
+        padding: 6px;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    .rank-badge {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 12px;
+    }
+}

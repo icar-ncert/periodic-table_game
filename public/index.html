@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table Challenge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <h1 class="text-center mb-4 glow-text">Periodic Table Challenge</h1>
+        <div id="role-selection" class="text-center mb-4">
+            <h3>Select Your Role</h3>
+            <button id="teacher-btn" class="btn modern-btn" aria-label="Select Teacher Role">Teacher</button>
+            <button id="student-btn" class="btn modern-btn ms-2" aria-label="Select Student Role">Student</button>
+            <button id="individual-btn" class="btn modern-btn ms-2" aria-label="Play Individually">Individual Play</button>
+        </div>
+        <div id="teacher-controls" class="text-center mb-4" style="display: none;">
+            <h3>Create Room</h3>
+            <input id="teacher-name" type="text" class="form-control d-inline-block w-auto" placeholder="Enter your name" aria-label="Teacher Name">
+            <button id="create-room-btn" class="btn modern-btn mt-2" aria-label="Create Room">Create Room</button>
+            <div id="room-code-display" class="mt-3" role="alert"></div>
+            <div id="student-list" class="mt-3"></div>
+            <select id="difficulty" class="form-select d-inline-block w-auto modern-select mt-3" aria-label="Select Difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <button id="start-game-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Start Game">Start Quiz</button>
+            <button id="next-question-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Next Question">Next Question</button>
+        </div>
+        <div id="teacher-leaderboard" class="text-center mb-4" style="display: none;">
+            <h3>Live Leaderboard</h3>
+            <table class="table table-bordered leaderboard-table" aria-label="Live Leaderboard">
+                <thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Elements Placed</th></tr></thead>
+                <tbody id="teacher-leaderboard-body"></tbody>
+            </table>
+            <button id="stop-quiz-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Stop Quiz">Stop Quiz</button>
+            <button id="resume-quiz-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Resume Quiz">Resume Quiz</button>
+            <button id="finish-quiz-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Finish Quiz">Finish Quiz</button>
+            <button id="publish-leaderboard-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Publish Leaderboard">Publish Leaderboard</button>
+        </div>
+        <div id="student-join" class="text-center mb-4" style="display: none;">
+            <h3>Join Room</h3>
+            <input id="student-name" type="text" class="form-control d-inline-block w-auto" placeholder="Enter your name" aria-label="Student Name">
+            <input id="room-code" type="text" class="form-control d-inline-block w-auto mt-2" placeholder="Enter room code" aria-label="Room Code">
+            <button id="join-room-btn" class="btn modern-btn mt-2" aria-label="Join Room">Join Room</button>
+        </div>
+        <div id="individual-mode" class="text-center mb-4" style="display: none;">
+            <h3>Individual Play</h3>
+            <select id="individual-difficulty" class="form-select d-inline-block w-auto modern-select mt-3" aria-label="Select Difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <button id="start-individual-btn" class="btn modern-btn mt-2" aria-label="Start Individual Game">Start Game</button>
+        </div>
+        <div id="leaderboard" class="text-center mb-4" style="display: none;">
+            <h3>Leaderboard</h3>
+            <table class="table table-bordered leaderboard-table" aria-label="Leaderboard">
+                <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+        </div>
+        <div id="game-area" style="display: none;">
+            <div class="d-flex justify-content-between mb-4 stats-bar">
+                <div id="score-display" class="stat glow-text neon-green">🏆 Score: 0</div>
+                <div id="timer" class="stat">⏳ Time Bonus: 200</div>
+                <div class="stat glow-text neon-blue">❓ Questions: <span id="question-count">0/10</span></div>
+            </div>
+            <div id="progress-bar" class="modern-progress-bar">
+                <div id="progress"></div>
+            </div>
+            <div id="question-display" class="text-center mb-4 h4 glow-text neon-purple"></div>
+            <div id="draggable-container" class="draggable-area"></div>
+            <div class="position-relative">
+                <div class="group-numbers"></div>
+                <div class="period-numbers"></div>
+                <div id="periodic-table" class="modern-table">
+                    <div class="row-gap"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.3/dist/sweetalert2.all.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
