@@ -187,7 +187,7 @@ function initGame() {
     socket.on('quizResumed', () => { if (userRole === 'student') { Swal.close(); document.getElementById('game-area').style.display = 'block'; } else { document.getElementById('stop-quiz-btn').style.display = 'inline-block'; document.getElementById('resume-quiz-btn').style.display = 'none'; document.getElementById('finish-quiz-btn').style.display = 'inline-block'; } });
     
     socket.on('quizFinished', ({ students }) => {
-        console.log("[Client] Received quizFinished", students);
+        console.log("Client received quizFinished", students); // DEBUG LOG
         if (userRole === 'teacher') {
             document.getElementById('stop-quiz-btn').style.display = 'none';
             document.getElementById('resume-quiz-btn').style.display = 'none';
@@ -291,7 +291,7 @@ function handleDrop(e) {
 
 function showFeedback(isCorrect, element) {
     const elementName = element ? (element.name || element.Name) : 'Unknown Element';
-    Swal.fire({ title: isCorrect ? '🎉 Correct!' : '❌ Wrong!', html: isCorrect ? `+${100 + timeBonus} points!` : `You clicked: <strong>${elementName}</strong>`, timer: 1000, showConfirmButton: false });
+    Swal.fire({ title: isCorrect ? '🎉 Correct!' : '❌ incorrect !', html: isCorrect ? `+${100 + timeBonus} points!` : `You clicked: <strong>${elementName}</strong>`, timer: 2000, showConfirmButton: false });
 }
 
 // --- REVIEW LOGIC ---
@@ -304,20 +304,14 @@ function endGame(students) {
 
 function showReviewScreen(students) {
     const myData = students.find(s => s.name === userName);
-    
-    // --- DEBUG: Let's see exactly what we got ---
-    const debugString = JSON.stringify(students, null, 2);
-    console.log("[Debug] Raw students data:", debugString);
-    console.log("[Debug] My Data:", myData);
-    // -------------------------------------------
-
     if (!myData) {
-        return Swal.fire("Error", "Could not find your data.", "error");
+        console.error("Could not find user data in response", students);
+        return;
     }
 
     const history = myData.answerHistory || [];
-    console.log("[Debug] History length:", history.length);
-
+    console.log("History length:", history.length, history); // DEBUG LOG
+    
     const correctCount = history.filter(a => a.isCorrect).length;
     const wrongCount = history.length - correctCount;
 
@@ -365,14 +359,6 @@ function showReviewScreen(students) {
                         ${tableRows}
                     </tbody>
                 </table>
-            </div>
-            
-            <!-- DEBUG SECTION -->
-            <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px; text-align: left; font-size: 10px;">
-                <strong>Debug Info (User: ${userName}):</strong><br>
-                History Length: ${history.length}<br>
-                Found MyData: ${!!myData}<br>
-                <textarea style="width:100%; height: 50px">${debugString}</textarea>
             </div>
             
             <div class="mt-4">
