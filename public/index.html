@@ -4,91 +4,205 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Periodic Table Challenge</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <div id="game-container">
+    <div id="game-container" class="container-fluid">
         <h1 class="text-center mb-4 glow-text">Periodic Table Challenge</h1>
+
+        <!-- Role Selection -->
         <div id="role-selection" class="text-center mb-4">
             <h3>Select Your Role</h3>
-            <button id="teacher-btn" class="btn modern-btn" aria-label="Select Teacher Role">Teacher</button>
-            <button id="student-btn" class="btn modern-btn ms-2" aria-label="Select Student Role">Student</button>
-            <button id="individual-btn" class="btn modern-btn ms-2" aria-label="Play Individually">Individual Play</button>
+            <button id="teacher-btn" class="btn modern-btn">👨‍🏫 Teacher</button>
+            <button id="student-btn" class="btn modern-btn">👨‍🎓 Student</button>
+            <button id="individual-btn" class="btn modern-btn">🎮 Individual Play</button>
         </div>
+
+        <!-- =========================================== -->
+        <!-- INSTRUCTIONS PANEL -->
+        <!-- =========================================== -->
+        <div id="instructions-panel" class="mt-5">
+            <h3 class="text-center mb-4">📋 Game Instructions & Rules</h3>
+            
+            <div class="accordion" id="rulesAccordion">
+                <!-- Overview Section -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOverview">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOverview" aria-expanded="true" aria-controls="collapseOverview">
+                            🌟 Overview & Objective
+                        </button>
+                    </h2>
+                    <div id="collapseOverview" class="accordion-collapse collapse show" aria-labelledby="headingOverview" data-bs-parent="#rulesAccordion">
+                        <div class="accordion-body">
+                            <p>The <strong>Periodic Table Challenge</strong> is an interactive educational tool designed to enhance understanding of chemical elements, their properties, and their positions in the periodic table.</p>
+                            <ul>
+                                <li><strong>Teacher Mode:</strong> Host a live classroom session. Generate a room code and invite students to compete in real-time.</li>
+                                <li><strong>Student Mode:</strong> Join a teacher's room using a unique Room Code.</li>
+                                <li><strong>Individual Mode:</strong> Practice solo to improve your speed and accuracy.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Difficulty Modes -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingModes">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseModes" aria-expanded="false" aria-controls="collapseModes">
+                             Difficulty Modes
+                        </button>
+                    </h2>
+                    <div id="collapseModes" class="accordion-collapse collapse" aria-labelledby="headingModes" data-bs-parent="#rulesAccordion">
+                        <div class="accordion-body">
+                            <div class="rule-card">
+                                <h5>🟢 Easy Mode</h5>
+                                <p><strong>Objective:</strong> Identify elements by their name.</p>
+                                <p><strong>Instructions:</strong> An element name (e.g., "Oxygen") will appear on screen. You must click the correct element box on the periodic table.</p>
+                            </div>
+                            <hr>
+                            <div class="rule-card">
+                                <h5>🟡 Medium Mode</h5>
+                                <p><strong>Objective:</strong> Place elements in their correct positions.</p>
+                                <p><strong>Instructions:</strong> You are given 10 draggable element boxes. Drag each element to its correct position on the blank periodic table grid. This tests your knowledge of atomic number trends and group/family locations.</p>
+                            </div>
+                            <hr>
+                            <div class="rule-card">
+                                <h5>🔴 Hard Mode</h5>
+                                <p><strong>Objective:</strong> Identify elements by specific Physical and Chemical properties.</p>
+                                <p><strong>Instructions:</strong> A property (e.g., "Atomic Mass = 15.999 u" or "Electron Configuration") is displayed. You must identify which element possesses that property.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scoring System -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingScoring">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseScoring" aria-expanded="false" aria-controls="collapseScoring">
+                            🏆 Scoring System
+                        </button>
+                    </h2>
+                    <div id="collapseScoring" class="accordion-collapse collapse" aria-labelledby="headingScoring" data-bs-parent="#rulesAccordion">
+                        <div class="accordion-body">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Action</th>
+                                        <th>Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Correct Answer</td>
+                                        <td class="text-success fw-bold">+100 Base Points</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Time Bonus</td>
+                                        <td class="text-primary fw-bold">+0 to +200 Points</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Wrong Answer</td>
+                                        <td class="text-danger fw-bold">-50 Points</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="text-muted small">*Time Bonus decreases by 2 points every 0.1 seconds. Answer quickly to maximize your score!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END INSTRUCTIONS PANEL -->
+
+
+        <!-- Teacher Controls -->
         <div id="teacher-controls" class="text-center mb-4" style="display: none;">
-            <h3>Create Room</h3>
-            <input id="teacher-name" type="text" class="form-control d-inline-block w-auto" placeholder="Enter your name" aria-label="Teacher Name">
-            <button id="create-room-btn" class="btn modern-btn mt-2" aria-label="Create Room">Create Room</button>
-            <div id="room-code-display" class="mt-3" role="alert"></div>
+            <input id="teacher-name" type="text" class="form-control d-inline-block w-auto" placeholder="Enter your name">
+            <button id="create-room-btn" class="btn modern-btn">Create Room</button>
+            <div id="room-code-display" class="mt-3 fw-bold fs-5"></div>
             <div id="student-list" class="mt-3"></div>
-            <select id="difficulty" class="form-select d-inline-block w-auto modern-select mt-3" aria-label="Select Difficulty">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
-            <button id="start-game-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Start Game">Start Quiz</button>
-            <button id="next-question-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Next Question">Next Question</button>
+            
+            <div class="mt-3">
+                <select id="difficulty" class="form-select d-inline-block w-auto modern-select mt-3">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <button id="start-game-btn" class="btn modern-btn mt-2" style="display: none;">Start Quiz</button>
+            </div>
         </div>
+
+        <!-- Teacher Leaderboard & Controls -->
         <div id="teacher-leaderboard" class="text-center mb-4" style="display: none;">
             <h3>Live Leaderboard</h3>
-            <table class="table table-bordered leaderboard-table" aria-label="Live Leaderboard">
-                <thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Elements Placed</th></tr></thead>
+            <table class="table table-bordered leaderboard-table">
+                <thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>Progress</th></tr></thead>
                 <tbody id="teacher-leaderboard-body"></tbody>
             </table>
-            <button id="stop-quiz-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Stop Quiz">Stop Quiz</button>
-            <button id="resume-quiz-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Resume Quiz">Resume Quiz</button>
-            <button id="finish-quiz-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Finish Quiz">Finish Quiz</button>
-            <button id="publish-leaderboard-btn" class="btn modern-btn mt-2" style="display: none;" aria-label="Publish Leaderboard">Publish Leaderboard</button>
+            <button id="stop-quiz-btn" class="btn modern-btn mt-2" style="display: none;">Stop Quiz</button>
+            <button id="resume-quiz-btn" class="btn modern-btn mt-2" style="display: none;">Resume Quiz</button>
+            <button id="finish-quiz-btn" class="btn modern-btn mt-2" style="display: none;">Finish Quiz</button>
+            <button id="publish-leaderboard-btn" class="btn modern-btn mt-2" style="display: none;">Publish Leaderboard</button>
+            <button id="close-room-btn" class="btn modern-btn mt-2" style="display: none; background: linear-gradient(45deg, #ef9a9a, #f44336);">Close Room</button>
         </div>
+
+        <!-- Student Join -->
         <div id="student-join" class="text-center mb-4" style="display: none;">
-            <h3>Join Room</h3>
-            <input id="student-name" type="text" class="form-control d-inline-block w-auto" placeholder="Enter your name" aria-label="Student Name">
-            <input id="room-code" type="text" class="form-control d-inline-block w-auto mt-2" placeholder="Enter room code" aria-label="Room Code">
-            <button id="join-room-btn" class="btn modern-btn mt-2" aria-label="Join Room">Join Room</button>
+            <h3>Join a Game</h3>
+            <input id="student-name" type="text" class="form-control d-inline-block w-auto" placeholder="Enter your name">
+            <input id="room-code" type="text" class="form-control d-inline-block w-auto mt-2" placeholder="Enter room code">
+            <button id="join-room-btn" class="btn modern-btn mt-2">Join Room</button>
         </div>
+
+        <!-- Individual Mode -->
         <div id="individual-mode" class="text-center mb-4" style="display: none;">
             <h3>Individual Play</h3>
-            <select id="individual-difficulty" class="form-select d-inline-block w-auto modern-select mt-3" aria-label="Select Difficulty">
+            <select id="individual-difficulty" class="form-select d-inline-block w-auto modern-select">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
             </select>
-            <button id="start-individual-btn" class="btn modern-btn mt-2" aria-label="Start Individual Game">Start Game</button>
+            <button id="start-individual-btn" class="btn modern-btn mt-2">Start Game</button>
         </div>
+
+        <!-- Game Area -->
+        <div id="game-area" class="game-area" style="display: none;">
+            <div class="game-header">
+                <div id="score-display">🏆 Score: 0</div>
+                <div id="timer">⏳ Time Bonus: 200</div>
+                <div id="question-count">0/10</div>
+            </div>
+            <div id="progress-container"><div id="progress"></div></div>
+            <h2 id="question-display" class="text-center my-3"></h2>
+            
+            <!-- Draggable Container (Medium Mode) -->
+            <div id="draggable-container" class="draggable-container"></div>
+
+            <!-- Periodic Table Wrapper -->
+            <div class="periodic-table-wrapper">
+                <div class="group-numbers"></div>
+                <div class="period-numbers"></div>
+                <div id="periodic-table" class="periodic-table"></div>
+            </div>
+        </div>
+
+        <!-- Student Leaderboard -->
         <div id="leaderboard" class="text-center mb-4" style="display: none;">
             <h3>Leaderboard</h3>
-            <table class="table table-bordered leaderboard-table" aria-label="Leaderboard">
+            <table class="table table-bordered leaderboard-table">
                 <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
                 <tbody id="leaderboard-body"></tbody>
             </table>
         </div>
-        <div id="game-area" style="display: none;">
-            <div class="d-flex justify-content-between mb-4 stats-bar">
-                <div id="score-display" class="stat glow-text neon-green">🏆 Score: 0</div>
-                <div id="timer" class="stat">⏳ Time Bonus: 200</div>
-                <div class="stat glow-text neon-blue">❓ Questions: <span id="question-count">0/10</span></div>
-            </div>
-            <div id="progress-bar" class="modern-progress-bar">
-                <div id="progress"></div>
-            </div>
-            <div id="question-display" class="text-center mb-4 h4 glow-text neon-purple"></div>
-            <div id="draggable-container" class="draggable-area"></div>
-            <div class="position-relative">
-                <div class="group-numbers"></div>
-                <div class="period-numbers"></div>
-                <div id="periodic-table" class="modern-table">
-                    <div class="row-gap"></div>
-                </div>
-            </div>
-        </div>
+
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.3/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
