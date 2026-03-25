@@ -1,3 +1,41 @@
+/* Review Screen Styles */
+.review-container {
+    text-align: left;
+    font-size: 14px;
+}
+
+.review-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.review-stat .label {
+    font-weight: 600;
+    color: #555;
+    margin-right: 5px;
+}
+
+.review-stat .value {
+    font-size: 1.2em;
+    font-weight: 700;
+}
+
+.review-table {
+    font-size: 13px;
+}
+
+.review-correct {
+    background-color: #e8f5e9 !important;
+}
+
+.review-wrong {
+    background-color: #ffebee !important;
+}
+
 /* General Styles */
 * {
     box-sizing: border-box;
@@ -181,25 +219,12 @@ h1, h3 {
     outline-offset: 2px;
 }
 
-#stop-quiz-btn {
-    background: linear-gradient(45deg, #ef9a9a, #f44336);
-}
-
-#resume-quiz-btn {
-    background: linear-gradient(45deg, #a5d6a7, #4caf50);
-}
-
-#finish-quiz-btn {
-    background: linear-gradient(45deg, #ffcc80, #ff9800);
-}
-
-#publish-leaderboard-btn {
-    background: linear-gradient(45deg, #ce93d8, #ab47bc);
-}
-
-#next-question-btn {
-    background: linear-gradient(45deg, #4fc3f7, #0288d1);
-}
+#stop-quiz-btn { background: linear-gradient(45deg, #ef9a9a, #f44336); }
+#resume-quiz-btn { background: linear-gradient(45deg, #a5d6a7, #4caf50); }
+#finish-quiz-btn { background: linear-gradient(45deg, #ffcc80, #ff9800); }
+#publish-leaderboard-btn { background: linear-gradient(45deg, #ce93d8, #ab47bc); }
+#close-room-btn { background: linear-gradient(45deg, #ef9a9a, #f44336); }
+#next-question-btn { background: linear-gradient(45deg, #4fc3f7, #0288d1); }
 
 /* Stats Bar for Students */
 .stats-bar {
@@ -215,20 +240,19 @@ h1, h3 {
 }
 
 /* Progress Bar for Students */
-#progress-bar {
-    background: grid;
-    border-radius: 10px;
-    height: 10px;
-    overflow: hidden;
-    margin: 1rem 0;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+#progress-container {
+    width: 100%;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    margin-bottom: 1rem;
 }
 
 #progress {
-    background: linear-gradient(90deg, #a5d6a7, #81d4fa);
     height: 100%;
-    width: 0;
-    transition: width 0.5s ease;
+    background: linear-gradient(90deg, #4caf50, #81c784);
+    border-radius: 3px;
+    transition: width 0.3s;
 }
 
 /* Draggable Area for Students */
@@ -244,6 +268,8 @@ h1, h3 {
     margin-bottom: 1rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
     overflow-x: auto;
+    position: relative;
+    z-index: 10;
 }
 
 /* Medium Mode Completion */
@@ -348,9 +374,16 @@ h1, h3 {
 .element.droppable {
     background: rgba(0, 0, 0, 0.05);
     border: 2px dashed #0288d1;
+    transition: all 0.2s ease;
 }
 
-.element.empty {
+.element.droppable.dragover {
+    background: rgba(2, 136, 209, 0.2);
+    border: 2px solid #0288d1;
+    transform: scale(1.05);
+}
+
+.element .empty {
     background: transparent;
     border: none;
     cursor: default;
@@ -394,10 +427,35 @@ h1, h3 {
     animation: shake 0.3s ease;
 }
 
+/* Enhanced highlight animation */
+.persistent-highlight {
+    animation: glow-pulse 1s infinite ease-in-out;
+    box-shadow: 0 0 15px #00ff00;
+}
+
+@keyframes glow-pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+
 .highlight-correct {
-    border: 4px solid #66bb6a !important;
-    background: rgba(0, 255, 0, 0.2) !important;
-    z-index: 2;
+    animation: enhanced-pulse 2s infinite;
+    z-index: 10;
+    position: relative;
+}
+
+.temp-correct-display {
+    background-color: rgba(0, 255, 0, 0.2) !important;
+    border: 3px solid #00ff00 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+@keyframes pulse-highlight {
+    0% { transform: scale(1); box-shadow: 0 0 15px #00ff00; }
+    50% { transform: scale(1.1); box-shadow: 0 0 25px #00ff00, 0 0 35px rgba(0, 255, 0, 0.5); }
+    100% { transform: scale(1); box-shadow: 0 0 15px #00ff00; }
 }
 
 /* Group-Block Backgrounds */
@@ -413,15 +471,9 @@ h1, h3 {
 .group-block-actinide { background-color: #f5c2da; }
 
 /* Easy Mode Specific Colors */
-.easy-mode .hydrogen-block {
-    background-color: #fff59d !important;
-}
-.easy-mode .helium-block {
-    background-color: #80deea !important;
-}
-.easy-mode .group-block-alkaline-earth-metal {
-    background-color: #ffccbc !important;
-}
+.easy-mode .hydrogen-block { background-color: #fff59d !important; }
+.easy-mode .helium-block { background-color: #80deea !important; }
+.easy-mode .group-block-alkaline-earth-metal { background-color: #ffccbc !important; }
 
 /* Animations */
 @keyframes bounce {
@@ -436,124 +488,183 @@ h1, h3 {
     75% { transform: translateX(-5px); }
 }
 
+/* ========================================== */
+/* INSTRUCTIONS PANEL STYLES */
+/* ========================================== */
+#instructions-panel {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    margin-top: 3rem;
+}
+
+#instructions-panel h3 {
+    color: #1a1a1a;
+    font-weight: 700;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.accordion-button {
+    font-weight: 600;
+    color: #1a1a1a;
+    background-color: #f8f9fa;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #e3f2fd; /* Light Blue */
+    color: #0277bd; /* Blue */
+}
+
+.accordion-body {
+    background-color: #fff;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.rule-card {
+    background: #f9fafb;
+    border-left: 5px solid #a5d6a7;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0 8px 8px 0;
+}
+
+.rule-card h5 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #2e7d32;
+}
+
 /* Responsive Design */
 @media screen and (max-width: 767px) {
-    #game-container {
-        padding: 10px;
-    }
+    #game-container { padding: 10px; }
     #periodic-table {
         grid-template-columns: repeat(18, minmax(50px, 1fr));
         grid-template-rows: repeat(7, 60px) 15px repeat(2, 60px);
-        gap: 2px;
-        padding: 8px;
+        gap: 2px; padding: 8px;
     }
-    .row-gap {
-        height: 15px;
-    }
-    .element {
-        height: 60px;
-    }
-    .element.draggable {
-        width: 60px;
-        height: 60px;
-    }
-    .element .symbol {
-        font-size: 14px;
-    }
-    .element .number, .element .atomic-mass {
-        font-size: 8px;
-    }
-    .group-numbers {
-        grid-template-columns: repeat(18, minmax(40px, 1fr));
-        gap: 2px;
-        padding: 8px 2px 0 2px;
-    }
-    .group-numbers div, .period-number {
-        font-size: 0.8rem;
-    }
-    .period-numbers {
-        left: 0px;
-        top: 34px;
-        gap: 0px;
-    }
-    .period-number {
-        width: 20px;
-        height: 60px;
-        line-height: 60px;
-    }
-    #draggable-container {
-        min-height: 80px;
-        gap: 8px;
-        padding: 1rem;
-    }
-    #question-display {
-        font-size: 1rem;
-        padding: 8px;
-    }
-    .leaderboard-table {
-        width: 100%;
-        font-size: 0.9rem;
-    }
+    .row-gap { height: 15px; }
+    .element { height: 60px; }
+    .element.draggable { width: 60px; height: 60px; }
+    .element .symbol { font-size: 14px; }
+    .element .number, .element .atomic-mass { font-size: 8px; }
+    .group-numbers { grid-template-columns: repeat(18, minmax(40px, 1fr)); gap: 2px; padding: 8px 2px 0 2px; }
+    .group-numbers div, .period-number { font-size: 0.8rem; }
+    .period-numbers { left: 0px; top: 34px; gap: 0px; }
+    .period-number { width: 20px; height: 60px; line-height: 60px; }
+    #draggable-container { min-height: 80px; gap: 8px; padding: 1rem; }
+    #question-display { font-size: 1rem; padding: 8px; }
+    .leaderboard-table { width: 100%; font-size: 0.9rem; }
+    
+    /* Responsive Header */
+    .game-header { flex-wrap: wrap; gap: 0.5rem; }
+    .game-header > div { flex: 1 1 100%; text-align: center !important; }
 }
 
 @media screen and (max-width: 480px) {
     #periodic-table {
         grid-template-columns: repeat(18, minmax(40px, 1fr));
         grid-template-rows: repeat(7, 50px) 10px repeat(2, 50px);
-        gap: 2px;
-        padding: 6px;
+        gap: 2px; padding: 6px;
     }
-    .row-gap {
-        height: 10px;
-    }
-    .element {
-        height: 50px;
-    }
-    .element.draggable {
-        width: 50px;
-        height: 50px;
-    }
-    .element .symbol {
-        font-size: 12px;
-    }
-    .element .number, .element .atomic-mass {
-        font-size: 10px;
-    }
-    .group-numbers {
-        grid-template-columns: repeat(18, minmax(40px, 1fr));
-        gap: 2px;
-        padding: 6px 2px 0;
-    }
-    .group-numbers div, .period-number {
-        font-size: 0.7rem;
-    }
-    .period-numbers {
-        left: 0px;
-        top: 30px;
-        gap: 2px;
-    }
-    .period-number {
-        width: 20px;
-        height: 50px;
-        line-height: 50px;
-    }
-    #draggable-container {
-        min-height: 100px;
-        gap: 6px;
-        padding: 0.5rem;
-    }
-    #question-display {
-        font-size: 0.9rem;
-        padding: 6px;
-    }
-    .leaderboard-table th, .leaderboard-table td {
-        padding: 0.5rem;
-        font-size: 0.8rem;
-    }
-    .rank-badge {
-        width: 20px;
-        height: 20px;
-        line-height: 20px;
-        font-size: 12px;
-    }
+    .row-gap { height: 10px; }
+    .element { height: 50px; }
+    .element.draggable { width: 50px; height: 50px; }
+    .element .symbol { font-size: 12px; }
+    .element .number, .element .atomic-mass { font-size: 10px; }
+    .group-numbers { grid-template-columns: repeat(18, minmax(40px, 1fr)); gap: 2px; padding: 6px 2px 0; }
+    .group-numbers div, .period-number { font-size: 0.7rem; }
+    .period-numbers { left: 0px; top: 30px; gap: 2px; }
+    .period-number { width: 20px; height: 50px; line-height: 50px; }
+    #draggable-container { min-height: 100px; gap: 6px; padding: 0.5rem; }
+    #question-display { font-size: 0.9rem; padding: 6px; }
+    .leaderboard-table th, .leaderboard-table td { padding: 0.5rem; font-size: 0.8rem; }
+    .rank-badge { width: 20px; height: 20px; line-height: 20px; font-size: 12px; }
+}
+
+/* Unified element sizing matching easy mode */
+.element, #draggable-container .element {
+    width: 70px;
+    height: 70px;
+    font-size: 12px;
+    padding: 4px;
+    margin: 3px;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Periodic table grid adjustments */
+#periodic-table { gap: 3px; grid-auto-rows: 70px; }
+
+/* Draggable container layout */
+#draggable-container { grid-template-columns: repeat(auto-fill, 70px); gap: 6px; padding: 8px; }
+
+/* Enhanced hover effects */
+.element:hover { transform: scale(1.1); z-index: 3; }
+
+/* Hard Mode Specific Colors - similar to easy mode */
+.hard-mode .hydrogen-block { background-color: #fff59d !important; }
+.hard-mode .helium-block { background-color: #80deea !important; }
+.hard-mode .group-block-nonmetal { background-color: #ffcc99 !important; }
+.hard-mode .group-block-noble-gas { background-color: #f399b7 !important; }
+.hard-mode .group-block-alkali-metal { background-color: #ff9999 !important; }
+.hard-mode .group-block-alkaline-earth-metal { background-color: #99ccff !important; }
+.hard-mode .group-block-halogen { background-color: #99ffcc !important; }
+.hard-mode .group-block-metalloid { background-color: #99eeff !important; }
+.hard-mode .group-block-post-transition-metal { background-color: #c6e9f9 !important; }
+.hard-mode .group-block-transition-metal { background-color: #ffcece !important; }
+.hard-mode .group-block-lanthanide { background-color: #fd3c11 !important; }
+.hard-mode .group-block-actinide { background-color: #f5c2da !important; }
+
+.success-pulse { animation: successPulse 0.5s ease-out; }
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.highlight-pulse { animation: highlightPulse 2s infinite; }
+
+@keyframes highlightPulse {
+    0% { box-shadow: 0 0 5px #ff0000; }
+    50% { box-shadow: 0 0 15px #ff0000; }
+    100% { box-shadow: 0 0 5px #ff0000; }
+}
+
+/* ========================================== */
+/* FIX: Game Header Layout - Score (Left) Timer (Center) Count (Right) */
+/* ========================================== */
+.game-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+/* Ensure items take equal width so they align correctly */
+.game-header > div {
+    flex: 1; 
+}
+
+/* Text Alignments */
+#score-display {
+    text-align: left !important;
+}
+
+#timer {
+    text-align: center !important;
+    font-weight: bold;
+}
+
+#question-count {
+    text-align: right !important;
 }
