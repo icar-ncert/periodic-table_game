@@ -73,9 +73,30 @@ async function loadElements() {
 function initGame() {
     socket = io();
 
-    document.getElementById('teacher-btn').addEventListener('click', () => { userRole = 'teacher'; document.getElementById('role-selection').style.display = 'none'; document.getElementById('teacher-controls').style.display = 'block'; });
-    document.getElementById('student-btn').addEventListener('click', () => { userRole = 'student'; document.getElementById('role-selection').style.display = 'none'; document.getElementById('student-join').style.display = 'block'; });
-    document.getElementById('individual-btn').addEventListener('click', () => { userRole = 'individual'; document.getElementById('role-selection').style.display = 'none'; document.getElementById('individual-mode').style.display = 'block'; });
+    // Role Selection Buttons
+    document.getElementById('teacher-btn').addEventListener('click', () => { 
+        userRole = 'teacher'; 
+        document.getElementById('role-selection').style.display = 'none'; 
+        document.getElementById('teacher-controls').style.display = 'block';
+        // Hide Instructions when role is selected
+        document.getElementById('instructions-panel').style.display = 'none';
+    });
+    
+    document.getElementById('student-btn').addEventListener('click', () => { 
+        userRole = 'student'; 
+        document.getElementById('role-selection').style.display = 'none'; 
+        document.getElementById('student-join').style.display = 'block';
+        // Hide Instructions when role is selected
+        document.getElementById('instructions-panel').style.display = 'none';
+    });
+    
+    document.getElementById('individual-btn').addEventListener('click', () => { 
+        userRole = 'individual'; 
+        document.getElementById('role-selection').style.display = 'none'; 
+        document.getElementById('individual-mode').style.display = 'block';
+        // Hide Instructions when role is selected
+        document.getElementById('instructions-panel').style.display = 'none';
+    });
 
     document.getElementById('create-room-btn').addEventListener('click', () => {
         userName = document.getElementById('teacher-name').value.trim();
@@ -187,7 +208,6 @@ function initGame() {
     socket.on('quizResumed', () => { if (userRole === 'student') { Swal.close(); document.getElementById('game-area').style.display = 'block'; } else { document.getElementById('stop-quiz-btn').style.display = 'inline-block'; document.getElementById('resume-quiz-btn').style.display = 'none'; document.getElementById('finish-quiz-btn').style.display = 'inline-block'; } });
     
     socket.on('quizFinished', ({ students }) => {
-        console.log("Client received quizFinished", students); // DEBUG LOG
         if (userRole === 'teacher') {
             document.getElementById('stop-quiz-btn').style.display = 'none';
             document.getElementById('resume-quiz-btn').style.display = 'none';
@@ -291,7 +311,7 @@ function handleDrop(e) {
 
 function showFeedback(isCorrect, element) {
     const elementName = element ? (element.name || element.Name) : 'Unknown Element';
-    Swal.fire({ title: isCorrect ? '🎉 Correct!' : '❌ incorrect !', html: isCorrect ? `+${100 + timeBonus} points!` : `You clicked: <strong>${elementName}</strong>`, timer: 2000, showConfirmButton: false });
+    Swal.fire({ title: isCorrect ? '🎉 Correct!' : '❌ Incorrect !', html: isCorrect ? `+${100 + timeBonus} points!` : `You clicked: <strong>${elementName}</strong>`, timer: 2000, showConfirmButton: false });
 }
 
 // --- REVIEW LOGIC ---
@@ -304,14 +324,9 @@ function endGame(students) {
 
 function showReviewScreen(students) {
     const myData = students.find(s => s.name === userName);
-    if (!myData) {
-        console.error("Could not find user data in response", students);
-        return;
-    }
+    if (!myData) return;
 
     const history = myData.answerHistory || [];
-    console.log("History length:", history.length, history); // DEBUG LOG
-    
     const correctCount = history.filter(a => a.isCorrect).length;
     const wrongCount = history.length - correctCount;
 
@@ -427,6 +442,8 @@ function resetToRoleSelection() {
     document.getElementById('individual-mode').style.display = 'none';
     document.getElementById('leaderboard').style.display = 'none';
     document.getElementById('role-selection').style.display = 'block';
+    // Show instructions again when going home
+    document.getElementById('instructions-panel').style.display = 'block';
 }
 
 window.onload = async () => { if(await loadElements()) initGame(); };
