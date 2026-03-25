@@ -1,7 +1,5 @@
-let currentElement = null;
 let score = 0;
 let questionCount = 0;
-const maxQuestions = 10;
 let timeBonus = 200;
 let difficulty = 'easy';
 let draggableElements = [];
@@ -12,22 +10,22 @@ let socket;
 let userRole = null;
 let roomCode = null;
 let userName = null;
-let elementsPlaced = 0; // Track elements placed in medium mode
+let elementsPlaced = 0;
+let correctlyPlacedNumbers = new Set();
+let dropAttempts = 0;
+let isProcessing = false; 
+let mediumModeFinished = false;
 
 async function loadElements() {
     try {
         const responseEasyMedium = await fetch('data.json');
         elementsEasyMedium = await responseEasyMedium.json();
         if (!elementsEasyMedium.length) throw new Error('Empty data.json');
+        
         elementsEasyMedium = elementsEasyMedium.map(element => {
             const atomicNumber = parseInt(element.number);
-            if (atomicNumber >= 57 && atomicNumber <= 71) {
-                const col = (atomicNumber - 56) + 3;
-                return { ...element, row: 8, col };
-            } else if (atomicNumber >= 89 && atomicNumber <= 103) {
-                const col = (atomicNumber - 88) + 3;
-                return { ...element, row: 9, col };
-            }
+            if (atomicNumber >= 57 && atomicNumber <= 71) { const col = (atomicNumber - 56) + 3; return { ...element, row: 8, col }; }
+            else if (atomicNumber >= 89 && atomicNumber <= 103) { const col = (atomicNumber - 88) + 3; return { ...element, row: 9, col }; }
             return element;
         });
         elementsEasyMedium.sort((a, b) => parseInt(a.number) - parseInt(b.number));
@@ -35,82 +33,38 @@ async function loadElements() {
         const responseHard = await fetch('data2.json');
         const dataHard = await responseHard.json();
         if (!dataHard.length) throw new Error('Empty data2.json');
+        
         elementsHard = dataHard.map(element => {
             const atomicNumber = parseInt(element.AtomicNumber);
             let row, col;
-            if (atomicNumber >= 57 && atomicNumber <= 71) {
-                row = 8;
-                col = (atomicNumber - 57) + 4;
-            } else if (atomicNumber >= 89 && atomicNumber <= 103) {
-                row = 9;
-                col = (atomicNumber - 89) + 4;
-            } else if (atomicNumber === 1) {
-                row = 1;
-                col = 1;
-            } else if (atomicNumber === 2) {
-                row = 1;
-                col = 18;
-            } else if (atomicNumber >= 3 && atomicNumber <= 4) {
-                row = 2;
-                col = atomicNumber - 2;
-            } else if (atomicNumber >= 5 && atomicNumber <= 10) {
-                row = 2;
-                col = atomicNumber + 8;
-            } else if (atomicNumber >= 11 && atomicNumber <= 12) {
-                row = 3;
-                col = atomicNumber - 10;
-            } else if (atomicNumber >= 13 && atomicNumber <= 18) {
-                row = 3;
-                col = atomicNumber;
-            } else if (atomicNumber >= 19 && atomicNumber <= 36) {
-                row = 4;
-                col = atomicNumber - 18;
-            } else if (atomicNumber >= 37 && atomicNumber <= 54) {
-                row = 5;
-                col = atomicNumber - 36;
-            } else if (atomicNumber === 55) {
-                row = 6;
-                col = 1;
-            } else if (atomicNumber === 56) {
-                row = 6;
-                col = 2;
-            } else if (atomicNumber >= 72 && atomicNumber <= 86) {
-                row = 6;
-                col = atomicNumber - 68;
-            } else if (atomicNumber === 87) {
-                row = 7;
-                col = 1;
-            } else if (atomicNumber === 88) {
-                row = 7;
-                col = 2;
-            } else if (atomicNumber >= 104 && atomicNumber <= 118) {
-                row = 7;
-                col = atomicNumber - 100;
-            } else {
-                console.warn(`No row/col defined for atomic number ${atomicNumber}`);
-                row = 0;
-                col = 0;
-            }
+            if (atomicNumber >= 57 && atomicNumber <= 71) { row = 8; col = (atomicNumber - 57) + 4; }
+            else if (atomicNumber >= 89 && atomicNumber <= 103) { row = 9; col = (atomicNumber - 89) + 4; }
+            else if (atomicNumber === 1) { row = 1; col = 1; }
+            else if (atomicNumber === 2) { row = 1; col = 18; }
+            else if (atomicNumber >= 3 && atomicNumber <= 4) { row = 2; col = atomicNumber - 2; }
+            else if (atomicNumber >= 5 && atomicNumber <= 10) { row = 2; col = atomicNumber + 8; }
+            else if (atomicNumber >= 11 && atomicNumber <= 12) { row = 3; col = atomicNumber - 10; }
+            else if (atomicNumber >= 13 && atomicNumber <= 18) { row = 3; col = atomicNumber; }
+            else if (atomicNumber >= 19 && atomicNumber <= 36) { row = 4; col = atomicNumber - 18; }
+            else if (atomicNumber >= 37 && atomicNumber <= 54) { row = 5; col = atomicNumber - 36; }
+            else if (atomicNumber === 55) { row = 6; col = 1; }
+            else if (atomicNumber === 56) { row = 6; col = 2; }
+            else if (atomicNumber >= 72 && atomicNumber <= 86) { row = 6; col = atomicNumber - 68; }
+            else if (atomicNumber === 87) { row = 7; col = 1; }
+            else if (atomicNumber === 88) { row = 7; col = 2; }
+            else if (atomicNumber >= 104 && atomicNumber <= 118) { row = 7; col = atomicNumber - 100; }
+            else { row = 0; col = 0; }
+
             return {
-                number: element.AtomicNumber,
-                symbol: element.Symbol,
-                name: element.Name,
-                mass: element.AtomicMass,
-                row,
-                col,
-                group: element.GroupBlock,
-                electronConfiguration: element.ElectronConfiguration,
-                atomicRadius: element.AtomicRadius
+                number: element.AtomicNumber, symbol: element.Symbol, name: element.Name,
+                mass: element.AtomicMass, row, col, group: element.GroupBlock,
+                electronConfiguration: element.ElectronConfiguration, atomicRadius: element.AtomicRadius
             };
         });
         elementsHard.sort((a, b) => parseInt(a.number) - parseInt(b.number));
     } catch (error) {
         console.error('Error loading elements:', error);
-        Swal.fire({
-            title: 'Error',
-            text: 'Failed to load elements data! Please try again.',
-            icon: 'error'
-        });
+        Swal.fire({ title: 'Error', text: 'Failed to load element data!', icon: 'error' });
         return false;
     }
     return true;
@@ -119,663 +73,367 @@ async function loadElements() {
 function initGame() {
     socket = io();
 
-    document.getElementById('teacher-btn').addEventListener('click', () => {
-        userRole = 'teacher';
-        document.getElementById('role-selection').style.display = 'none';
-        document.getElementById('teacher-controls').style.display = 'block';
-    });
-
-    document.getElementById('student-btn').addEventListener('click', () => {
-        userRole = 'student';
-        document.getElementById('role-selection').style.display = 'none';
-        document.getElementById('student-join').style.display = 'block';
-    });
-
-    document.getElementById('individual-btn').addEventListener('click', () => {
-        userRole = 'individual';
-        document.getElementById('role-selection').style.display = 'none';
-        document.getElementById('individual-mode').style.display = 'block';
-    });
+    document.getElementById('teacher-btn').addEventListener('click', () => { userRole = 'teacher'; document.getElementById('role-selection').style.display = 'none'; document.getElementById('teacher-controls').style.display = 'block'; });
+    document.getElementById('student-btn').addEventListener('click', () => { userRole = 'student'; document.getElementById('role-selection').style.display = 'none'; document.getElementById('student-join').style.display = 'block'; });
+    document.getElementById('individual-btn').addEventListener('click', () => { userRole = 'individual'; document.getElementById('role-selection').style.display = 'none'; document.getElementById('individual-mode').style.display = 'block'; });
 
     document.getElementById('create-room-btn').addEventListener('click', () => {
         userName = document.getElementById('teacher-name').value.trim();
-        if (!userName) {
-            Swal.fire('Error', 'Please enter your name', 'error');
-            return;
-        }
+        if (!userName) return Swal.fire('Error', 'Please enter your name', 'error');
         socket.emit('createRoom', userName, ({ roomCode: code, success }) => {
-            if (success) {
-                roomCode = code;
-                document.getElementById('room-code-display').innerHTML = `Room Code: <strong>${roomCode}</strong>`;
-                document.getElementById('start-game-btn').style.display = 'inline-block';
-            } else {
-                Swal.fire('Error', 'Failed to create room', 'error');
-            }
+            if (success) { roomCode = code; document.getElementById('room-code-display').innerHTML = `Room Code: <strong>${roomCode}</strong>`; document.getElementById('student-list').innerHTML = '<h4>Students:</h4><ul id="student-list-ul"></ul>'; document.getElementById('start-game-btn').style.display = 'inline-block'; }
         });
     });
+    
+    document.getElementById('start-game-btn').addEventListener('click', () => { difficulty = document.getElementById('difficulty').value; socket.emit('startGame', { roomCode, difficulty }); });
+    document.getElementById('stop-quiz-btn').addEventListener('click', () => socket.emit('stopQuiz', { roomCode }));
+    document.getElementById('resume-quiz-btn').addEventListener('click', () => socket.emit('resumeQuiz', { roomCode }));
+    document.getElementById('finish-quiz-btn').addEventListener('click', () => socket.emit('finishQuiz', { roomCode }));
+    document.getElementById('publish-leaderboard-btn').addEventListener('click', () => socket.emit('publishLeaderboard', { roomCode }));
+    document.getElementById('close-room-btn').addEventListener('click', () => socket.emit('closeRoom', { roomCode }));
 
     document.getElementById('join-room-btn').addEventListener('click', () => {
         userName = document.getElementById('student-name').value.trim();
         const code = document.getElementById('room-code').value.trim().toUpperCase();
-        if (!userName || !code) {
-            Swal.fire('Error', 'Please enter your name and room code', 'error');
-            return;
-        }
-        socket.emit('joinRoom', { roomCode: code, studentName: userName }, ({ success, message, roomCode: joinedCode }) => {
-            if (success) {
-                roomCode = joinedCode;
-                document.getElementById('student-join').style.display = 'none';
-                document.getElementById('game-area').style.display = 'block';
-                Swal.fire('Success', `Joined room ${roomCode}! Waiting for the teacher to start the game.`, 'success');
-            } else {
-                Swal.fire('Error', message || 'Failed to join room', 'error');
-            }
+        if (!userName || !code) return Swal.fire('Error', 'Name and Code required', 'error');
+        socket.emit('joinRoom', { roomCode: code, studentName: userName }, ({ success, message }) => {
+            if (success) { roomCode = code; document.getElementById('student-join').style.display = 'none'; document.getElementById('game-area').style.display = 'block'; }
+            else { Swal.fire('Error', message || 'Failed to join', 'error'); }
         });
     });
 
     document.getElementById('start-individual-btn').addEventListener('click', () => {
-        if (!elementsEasyMedium.length || !elementsHard.length) {
-            Swal.fire('Error', 'Element data not loaded. Please refresh the page.', 'error');
-            return;
-        }
-        difficulty = document.getElementById('individual-difficulty').value;
-        userName = 'Player';
+        difficulty = document.getElementById('individual-difficulty').value; userName = 'Player';
         socket.emit('playIndividual', { studentName: userName, difficulty }, ({ success, quizId }) => {
-            if (success) {
-                roomCode = quizId;
-                document.getElementById('individual-mode').style.display = 'none';
-                document.getElementById('game-area').style.display = 'block';
-                Swal.fire('Success', `Started individual ${difficulty} mode game!`, 'success');
-            } else {
-                Swal.fire('Error', 'Failed to start individual game', 'error');
-            }
+            if (success) { roomCode = quizId; document.getElementById('individual-mode').style.display = 'none'; document.getElementById('game-area').style.display = 'block'; createPeriodicTable(); showDifficultyAlert(); }
         });
     });
 
-    document.getElementById('start-game-btn').addEventListener('click', () => {
-        if (!elementsEasyMedium.length || !elementsHard.length) {
-            Swal.fire('Error', 'Element data not loaded. Please refresh the page.', 'error');
-            return;
-        }
-        difficulty = document.getElementById('difficulty').value;
-        Swal.fire({
-            title: 'Starting Game',
-            text: 'The game is starting for all students!',
-            icon: 'info',
-            timer: 1500,
-            showConfirmButton: false
-        });
-        socket.emit('startGame', { roomCode, difficulty });
-    });
+    // --- SOCKET EVENTS ---
 
-    document.getElementById('next-question-btn').addEventListener('click', () => {
-        socket.emit('nextQuestion', { roomCode });
-    });
-
-    document.getElementById('stop-quiz-btn').addEventListener('click', () => {
-        socket.emit('stopQuiz', { roomCode });
-    });
-
-    document.getElementById('resume-quiz-btn').addEventListener('click', () => {
-        socket.emit('resumeQuiz', { roomCode });
-    });
-
-    document.getElementById('finish-quiz-btn').addEventListener('click', () => {
-        socket.emit('finishQuiz', { roomCode });
-    });
-
-    document.getElementById('publish-leaderboard-btn').addEventListener('click', () => {
-        socket.emit('publishLeaderboard', { roomCode });
-        Swal.fire('Leaderboard Published', 'All students can now see the leaderboard.', 'success');
-    });
-
-    socket.on('updateStudents', (students) => {
-        if (userRole === 'teacher') {
-            updateTeacherLeaderboard(students);
-        }
-    });
-
-    socket.on('gameStarted', ({ difficulty: gameDifficulty }) => {
-        difficulty = gameDifficulty;
-        score = 0;
-        questionCount = 0;
-        elementsPlaced = 0;
+    socket.on('gameStarted', ({ difficulty: d }) => {
+        difficulty = d; score = 0; questionCount = 0; elementsPlaced = 0; dropAttempts = 0;
+        correctlyPlacedNumbers.clear(); draggableElements = [];
+        mediumModeFinished = false;
         updateScoreDisplay();
         if (userRole === 'student' || userRole === 'individual') {
-            createPeriodicTable();
-            showDifficultyAlert();
-            document.getElementById('game-area').style.display = 'block';
-            Swal.fire('Game Started', `The ${userRole === 'individual' ? 'individual' : 'teacher has started the'} ${difficulty} mode game!`, 'success');
+            createPeriodicTable(); showDifficultyAlert();
         } else {
             document.getElementById('teacher-controls').style.display = 'none';
             document.getElementById('teacher-leaderboard').style.display = 'block';
             document.getElementById('stop-quiz-btn').style.display = 'inline-block';
+            document.getElementById('resume-quiz-btn').style.display = 'none';
             document.getElementById('finish-quiz-btn').style.display = 'inline-block';
+            document.getElementById('publish-leaderboard-btn').style.display = 'none';
+            document.getElementById('close-room-btn').style.display = 'none'; 
         }
-        document.getElementById('leaderboard').style.display = 'none';
     });
 
-    socket.on('teacherGameStarted', () => {
-        startNewGame();
-    });
-
-    socket.on('newQuestion', ({ question, questionProperty, questionCount: serverQuestionCount, elements }) => {
+    socket.on('newQuestion', ({ question, questionCount: qc, elements, questionProperty }) => {
         if (userRole !== 'student' && userRole !== 'individual') return;
-        currentQuestionProperty = questionProperty;
-        questionCount = serverQuestionCount;
-        draggableElements = elements || [];
-        const questionDisplay = document.getElementById('question-display');
-        if (questionDisplay) {
-            questionDisplay.innerHTML = question;
+        if (difficulty === 'medium' && mediumModeFinished) return;
+
+        document.getElementById('question-display').innerHTML = question;
+        questionCount = qc;
+        currentQuestionProperty = questionProperty; 
+        isProcessing = false; 
+        
+        if (difficulty === 'medium') {
+            if (draggableElements.length === 0 || (elements && elements.length !== draggableElements.length)) draggableElements = elements || [];
+            createPeriodicTable();
         } else {
-            console.error('Question display element not found');
+            resetTableColors();
+            if (difficulty === 'hard') createPeriodicTable();
         }
-        resetTableColors();
-        createPeriodicTable();
         updateProgress();
     });
 
-    socket.on('updateTimer', (timeBonusValue) => {
-        if (userRole !== 'student' && userRole !== 'individual') return;
-        timeBonus = timeBonusValue;
-        document.getElementById('timer').textContent = `⏳ Time Bonus: ${timeBonus}`;
-    });
+    socket.on('updateTimer', (t) => { timeBonus = t; document.getElementById('timer').textContent = `⏳ Time Bonus: ${timeBonus}`; });
 
-    socket.on('answerFeedback', ({ isCorrect, element }) => {
+    socket.on('answerFeedback', (result) => {
         if (userRole !== 'student' && userRole !== 'individual') return;
-        if (isCorrect) {
-            score += 100 + timeBonus;
-            elementsPlaced++;
-            launchConfetti();
-            const elementDiv = document.querySelector(`.element[data-number="${element.number}"]`);
-            if (elementDiv) {
-                elementDiv.classList.add('correct');
-                if (difficulty === 'medium' && elementsPlaced === 10) {
-                    elementDiv.classList.add('completed');
-                    socket.emit('mediumComplete', { roomCode, studentName: userName });
-                    if (userRole === 'individual') {
-                        Swal.fire('Quiz Completed', 'All elements placed correctly!', 'success');
-                    } else {
-                        Swal.fire('Your Part Completed', 'Waiting for other students to finish.', 'success');
-                    }
+        const { isCorrect, element, targetNumber, score: serverScore, elementsPlaced: serverPlaced } = result;
+        if (!element) return;
+        
+        isProcessing = false; 
+        
+        if (serverScore !== undefined) score = serverScore;
+        if (serverPlaced !== undefined) elementsPlaced = serverPlaced;
+
+        if (difficulty === 'medium') {
+            draggableElements = draggableElements.filter(e => parseInt(e.number || e.AtomicNumber) !== parseInt(element.number || element.AtomicNumber));
+            if (isCorrect) { correctlyPlacedNumbers.add(parseInt(element.number || element.AtomicNumber)); launchConfetti(); }
+            
+            if (elementsPlaced >= 10 || draggableElements.length === 0) {
+                mediumModeFinished = true;
+                createPeriodicTable();
+                if (userRole === 'individual') {
+                    document.getElementById('game-area').style.display = 'none';
+                } else {
+                    document.getElementById('game-area').style.display = 'none';
+                    Swal.fire({ title: 'Done!', text: 'Waiting for teacher...', allowOutsideClick: false, showConfirmButton: false });
                 }
-            }
+            } else { createPeriodicTable(); }
         } else {
-            score = Math.max(0, score - 50);
-            const elementDiv = document.querySelector(`.element[data-number="${element.number}"]`);
-            if (elementDiv && difficulty === 'hard') {
-                elementDiv.classList.add('highlight-correct');
-                setTimeout(() => elementDiv.classList.remove('highlight-correct'), 2000);
-            }
+            if (isCorrect) { const elDiv = document.querySelector(`.element[data-number="${element.number || element.AtomicNumber}"]`); if(elDiv) elDiv.classList.add('correct'); }
+            showFeedback(isCorrect, element);
         }
-        showFeedback(isCorrect, element);
         updateScoreDisplay();
     });
 
-    socket.on('allMediumComplete', () => {
-        if (userRole === 'teacher') {
-            Swal.fire({
-                title: 'All Students Completed',
-                text: 'Proceed to the next question?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Next Question',
-                cancelButtonText: 'Stay'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('next-question-btn').click();
-                }
-            });
-            document.getElementById('next-question-btn').style.display = 'inline-block';
-        }
-    });
-
-    socket.on('quizStopped', () => {
-        if (userRole === 'student') {
-            Swal.fire('Quiz Paused', 'The teacher has paused the quiz.', 'info');
-            document.getElementById('game-area').style.display = 'none';
-            document.getElementById('resume-quiz-btn').style.display = 'inline-block';
-        }
-    });
-
-    socket.on('quizResumed', () => {
-        if (userRole === 'student') {
-            Swal.fire('Quiz Resumed', 'The quiz has resumed!', 'success');
-            document.getElementById('game-area').style.display = 'block';
-            document.getElementById('resume-quiz-btn').style.display = 'none';
-        }
-    });
-
+    socket.on('waitForTeacher', () => { mediumModeFinished = true; document.getElementById('game-area').style.display = 'none'; Swal.fire({ title: 'Done!', text: 'Waiting for teacher...', allowOutsideClick: false, showConfirmButton: false }); });
+    socket.on('quizEnded', () => { if (userRole === 'student') { Swal.close(); Swal.fire({ title: 'Quiz Ended', text: 'Waiting for results...', allowOutsideClick: false, showConfirmButton: false }); }});
+    socket.on('quizStopped', () => { if (userRole === 'student') { document.getElementById('leaderboard').style.display = 'none'; Swal.fire({ title: 'Paused', allowOutsideClick: false, showConfirmButton: false }); document.getElementById('game-area').style.display = 'none'; } else { document.getElementById('stop-quiz-btn').style.display = 'none'; document.getElementById('resume-quiz-btn').style.display = 'inline-block'; document.getElementById('finish-quiz-btn').style.display = 'none'; } });
+    socket.on('quizResumed', () => { if (userRole === 'student') { Swal.close(); document.getElementById('game-area').style.display = 'block'; } else { document.getElementById('stop-quiz-btn').style.display = 'inline-block'; document.getElementById('resume-quiz-btn').style.display = 'none'; document.getElementById('finish-quiz-btn').style.display = 'inline-block'; } });
+    
     socket.on('quizFinished', ({ students }) => {
-        if (userRole === 'student' || userRole === 'individual') {
-            document.getElementById('game-area').style.display = 'none';
-            Swal.fire('Quiz Ended', userRole === 'individual' ? 'Your individual quiz has ended.' : 'The teacher has ended the quiz.', 'info');
-        } else {
+        console.log("[Client] Received quizFinished", students);
+        if (userRole === 'teacher') {
             document.getElementById('stop-quiz-btn').style.display = 'none';
             document.getElementById('resume-quiz-btn').style.display = 'none';
             document.getElementById('finish-quiz-btn').style.display = 'none';
             document.getElementById('publish-leaderboard-btn').style.display = 'inline-block';
+            document.getElementById('close-room-btn').style.display = 'inline-block'; 
             updateTeacherLeaderboard(students);
+        } else {
+            endGame(students);
         }
     });
 
     socket.on('showLeaderboard', ({ students }) => {
-        showLeaderboard(students);
+        if (userRole === 'student') {
+            Swal.close(); 
+            showReviewScreen(students);
+        }
     });
 
-    socket.on('roomClosed', () => {
-        Swal.fire('Room Closed', 'The teacher has closed the room.', 'info').then(() => {
-            resetToRoleSelection();
-        });
-    });
-
-    socket.on('error', ({ message }) => {
-        Swal.fire('Error', message, 'error');
-    });
+    socket.on('roomClosed', () => { Swal.fire('Room Closed', 'The teacher has closed the room.', 'info').then(() => resetToRoleSelection()); });
+    socket.on('updateStudents', (students) => { if (userRole === 'teacher') { document.getElementById('student-list-ul').innerHTML = students.map(s => `<li>${s.name} (${s.score})</li>`).join(''); updateTeacherLeaderboard(students); } });
 }
 
-function updateTeacherLeaderboard(students) {
-    const tbody = document.getElementById('teacher-leaderboard-body');
-    tbody.innerHTML = '';
-    students.sort((a, b) => b.score - a.score).forEach((student, index) => {
-        const row = document.createElement('tr');
-        row.classList.add('leaderboard-row');
-        const rankBadge = index < 3 ? `<span class="rank-badge rank-${index + 1}">${index + 1}</span>` : index + 1;
-        row.innerHTML = `<td>${rankBadge}</td><td>${student.name}</td><td>${student.score}</td><td>${student.elementsPlaced || 0}/10</td>`;
-        tbody.appendChild(row);
-        row.classList.add('slide-in');
-        setTimeout(() => row.classList.remove('slide-in'), 500);
-    });
-}
-
-function showDifficultyAlert() {
-    let title, html;
-    switch (difficulty) {
-        case 'easy':
-            title = 'Easy Mode: Periodic Table Challenge';
-            html = `Click on the correct element in the periodic table!<br>
-                <ul class="text-start">
-                    <li>✅ Correct: 100 + time bonus points</li>
-                    <li>❌ Wrong: -50 points</li>
-                    <li>⏳ Time bonus starts at 200, decreases over time</li>
-                    <li>🎯 Find the prompted element quickly!</li>
-                </ul>`;
-            break;
-        case 'medium':
-            title = 'Medium Mode: Periodic Table Challenge';
-            html = `Drag and drop 10 elements to their correct positions!<br>
-                <ul class="text-start">
-                    <li>✅ Correct: 100 + time bonus points per element</li>
-                    <li>❌ Wrong: -50 points, element moves to correct position</li>
-                    <li>⏳ Time bonus starts at 200, decreases over time</li>
-                    <li>🎯 Place all 10 elements accurately!</li>
-                </ul>`;
-            break;
-        case 'hard':
-            title = 'Hard Mode: Periodic Table Challenge';
-            html = `Click on the element matching the given property!<br>
-                <ul class="text-start">
-                    <li>✅ Correct: 100 + time bonus points</li>
-                    <li>❌ Wrong: -50 points, correct element highlighted for 2 seconds</li>
-                    <li>⏳ Time bonus starts at 200, decreases over time</li>
-                    <li>🎯 Identify elements by properties like Atomic Number, Atomic Mass, Atomic Radius!</li>
-                </ul>`;
-            break;
-    }
-    Swal.fire({
-        title,
-        html,
-        confirmButtonText: 'Start Game!'
-    });
-}
+// --- HELPER FUNCTIONS ---
 
 function createPeriodicTable() {
     const table = document.getElementById('periodic-table');
     const draggableContainer = document.getElementById('draggable-container');
-    const groupNumbers = document.querySelector('.group-numbers');
-    const periodNumbers = document.querySelector('.period-numbers');
-
-    table.className = 'modern-table';
-    if (difficulty === 'easy') {
-        table.classList.add('easy-mode');
-    }
-
     table.innerHTML = '<div class="row-gap"></div>';
     draggableContainer.innerHTML = '';
-    groupNumbers.innerHTML = '';
-    periodNumbers.innerHTML = '';
+    
+    const elements = difficulty === 'hard' ? elementsHard : elementsEasyMedium;
+    
+    elements.forEach(element => {
+        if ((element.row === 6 && element.col === 3) || (element.row === 7 && element.col === 3)) return;
+        if (element.row > 9 || element.col > 18) return;
 
-    for (let i = 1; i <= 18; i++) {
         const div = document.createElement('div');
-        div.textContent = i;
-        groupNumbers.appendChild(div);
-    }
+        div.className = `element group-block-${element.group}`;
+        div.dataset.number = element.number || element.AtomicNumber;
+        
+        const gridRow = element.row + (element.row >= 8 ? 1 : 0);
+        div.style.gridRow = gridRow;
+        div.style.gridColumn = element.col;
 
-    for (let i = 1; i <= 7; i++) {
-        const div = document.createElement('div');
-        div.className = 'period-number';
-        div.textContent = i;
-        periodNumbers.appendChild(div);
-    }
+        const atomicNum = element.number || element.AtomicNumber;
+        const isPlaced = correctlyPlacedNumbers.has(parseInt(atomicNum));
 
-    const disabledCells = [
-        { row: 6, col: 3 },
-        { row: 7, col: 3 }
-    ];
-
-    disabledCells.forEach(cell => {
-        const div = document.createElement('div');
-        div.className = 'element empty';
-        div.style.gridRow = cell.row;
-        div.style.gridColumn = cell.col;
+        if (isPlaced) {
+            div.classList.add('correct');
+            div.innerHTML = `<div class="number">${atomicNum}</div><div class="symbol">${element.symbol}</div>`;
+        } else if (difficulty === 'medium') {
+            div.classList.add('droppable');
+            div.addEventListener('dragover', (e) => e.preventDefault());
+            div.addEventListener('drop', handleDrop);
+        } else {
+            let numHTML = `<div class="number">${atomicNum}</div>`;
+            if (difficulty === 'hard' && currentQuestionProperty === 'atomicnumber') numHTML = `<div class="number">?</div>`;
+            let massHTML = `<div class="atomic-mass">${element.mass ? element.mass.toFixed(3) : '...'}</div>`;
+            if (difficulty === 'hard' && currentQuestionProperty === 'atomicmass') massHTML = `<div class="atomic-mass">?</div>`;
+            div.innerHTML = `${numHTML}<div class="symbol">${element.symbol}</div>${massHTML}`;
+            div.addEventListener('click', () => handleElementClick(element));
+        }
         table.appendChild(div);
     });
 
-    const elements = difficulty === 'hard' ? elementsHard : elementsEasyMedium;
-
     if (difficulty === 'medium') {
-        elements.forEach(element => {
-            if ((element.row === 6 && element.col === 3) || (element.row === 7 && element.col === 3)) {
-                return;
-            }
-            if (element.row > 9 || element.col > 18 || element.col < 1) {
-                console.warn(`Element ${element.name} (Z=${element.number}) has invalid position (row ${element.row}, col ${element.col}). Skipping.`);
-                return;
-            }
-            const div = document.createElement('div');
-            div.className = `element droppable group-block-${element.group}`;
-            div.dataset.number = element.number;
-            const gridRow = element.row + (element.row >= 8 ? 1 : 0);
-            div.style.gridRow = gridRow;
-            div.style.gridColumn = element.col;
-
-            if (element.name === 'Hydrogen') {
-                div.classList.add('hydrogen-block');
-            } else if (element.name === 'Helium') {
-                div.classList.add('helium-block');
-            }
-
-            table.appendChild(div);
-        });
-
-        draggableElements = elements
-            .filter(el => !(el.row === 6 && el.col === 3) && !(el.row === 7 && el.col === 3) && el.row <= 9 && el.col <= 18 && el.col >= 1)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 10);
+        draggableContainer.style.display = 'flex';
         draggableElements.forEach(element => {
             const div = document.createElement('div');
             div.className = `draggable element group-block-${element.group}`;
             div.draggable = true;
-            div.dataset.number = element.number;
-            div.innerHTML = `
-                <div class="number">${element.number}</div>
-                <div class="symbol">${element.symbol}</div>
-                <div class="atomic-mass">${element.mass.toFixed(3)}</div>
-            `;
-            div.addEventListener('dragstart', (e) => {
-                e.target.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', e.target.dataset.number);
-            });
+            div.dataset.number = element.number || element.AtomicNumber;
+            div.innerHTML = `<div class="number">${div.dataset.number}</div><div class="symbol">${element.symbol}</div>`;
+            div.addEventListener('dragstart', (e) => { if(isProcessing) return; e.target.classList.add('dragging'); e.dataTransfer.setData('text/plain', e.target.dataset.number); });
             div.addEventListener('dragend', (e) => e.target.classList.remove('dragging'));
             draggableContainer.appendChild(div);
         });
-
-        interact('.draggable').draggable({
-            inertia: true,
-            modifiers: [
-                interact.modifiers.restrictRect({
-                    restriction: 'parent',
-                    endOnly: true
-                })
-            ],
-            listeners: {
-                start(event) {
-                    event.target.classList.add('dragging');
-                },
-                move(event) {
-                    const target = event.target;
-                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                    target.style.transform = `translate(${x}px, ${y}px)`;
-                    target.setAttribute('data-x', x);
-                    target.setAttribute('data-y', y);
-                },
-                end(event) {
-                    event.target.classList.remove('dragging');
-                    event.target.style.transform = '';
-                    event.target.removeAttribute('data-x');
-                    event.target.removeAttribute('data-y');
-                }
-            }
-        });
-
-        interact('.droppable').dropzone({
-            accept: '.draggable',
-            overlap: 0.5,
-            ondrop(event) {
-                const droppedNumber = parseInt(event.relatedTarget.dataset.number);
-                const targetNumber = parseInt(event.target.dataset.number);
-                socket.emit('submitAnswer', { roomCode, answerNumber: droppedNumber, studentName: userName });
-                event.relatedTarget.remove();
-            }
-        });
-    } else {
-        elements.forEach(element => {
-            if ((element.row === 6 && element.col === 3) || (element.row === 7 && element.col === 3)) {
-                return;
-            }
-            if (element.row > 9 || element.col > 18 || element.col < 1) {
-                console.warn(`Element ${element.name} (Z=${element.number}) has invalid position (row ${element.row}, col ${element.col}). Skipping.`);
-                return;
-            }
-            const div = document.createElement('div');
-            div.className = `element group-block-${element.group}`;
-            div.dataset.number = element.number;
-            const gridRow = element.row + (element.row >= 8 ? 1 : 0);
-            div.style.gridRow = gridRow;
-            div.style.gridColumn = element.col;
-            let elementHTML = `<div class="symbol">${element.symbol}</div>`;
-            if (difficulty !== 'hard' || currentQuestionProperty !== 'number') {
-                elementHTML = `<div class="number">${element.number}</div>` + elementHTML;
-            }
-            if (difficulty !== 'hard' || currentQuestionProperty !== 'mass') {
-                elementHTML += `<div class="atomic-mass">${element.mass.toFixed(3)}</div>`;
-            }
-            div.innerHTML = elementHTML;
-            div.addEventListener('click', () => handleElementClick(element));
-            table.appendChild(div);
-        });
-    }
-}
-
-function startNewGame() {
-    if (userRole !== 'teacher') return;
-    if (questionCount >= maxQuestions) {
-        socket.emit('finishQuiz', { roomCode });
-        return;
-    }
-
-    if (difficulty === 'easy') {
-        currentElement = elementsEasyMedium[Math.floor(Math.random() * elementsEasyMedium.length)];
-        socket.emit('setQuestion', {
-            roomCode,
-            question: `Find: <strong>${currentElement.name}</strong>`,
-            element: currentElement,
-            questionProperty: null,
-            questionCount: questionCount + 1
-        });
-    } else if (difficulty === 'medium') {
-        const selectedElements = elementsEasyMedium
-            .filter(el => !(el.row === 6 && el.col === 3) && !(el.row === 7 && el.col === 3) && el.row <= 9 && el.col <= 18 && el.col >= 1)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 10);
-        socket.emit('setQuestion', {
-            roomCode,
-            question: `Drag and drop the 10 elements to their correct positions`,
-            element: null,
-            questionProperty: null,
-            questionCount: questionCount + 1,
-            elements: selectedElements
-        });
-    } else if (difficulty === 'hard') {
-        currentElement = elementsHard[Math.floor(Math.random() * elementsHard.length)];
-        const properties = [
-            { key: 'number', display: 'Atomic Number', value: currentElement.number },
-            { key: 'mass', display: 'Atomic Mass', value: currentElement.mass.toFixed(3) },
-            { key: 'electronConfiguration', display: 'Electron Configuration', value: currentElement.electronConfiguration },
-            { key: 'atomicRadius', display: 'Atomic Radius', value: currentElement.atomicRadius }
-        ].filter(prop => prop.value && prop.value !== '');
-        if (properties.length === 0) {
-            console.warn(`No valid properties for element ${currentElement.name} (Z=${currentElement.number}). Selecting another element.`);
-            return startNewGame();
-        }
-        const questionProp = properties[Math.floor(Math.random() * properties.length)];
-        currentQuestionProperty = questionProp.key;
-        socket.emit('setQuestion', {
-            roomCode,
-            question: `Which element has ${questionProp.display} = ${questionProp.value}?`,
-            element: currentElement,
-            questionProperty: questionProp.key,
-            questionCount: questionCount + 1
-        });
-    }
-    questionCount++;
+    } else { draggableContainer.style.display = 'none'; }
 }
 
 function handleElementClick(element) {
     if (userRole !== 'student' && userRole !== 'individual') return;
-    socket.emit('submitAnswer', {
-        roomCode: roomCode,
-        answerNumber: element.number,
-        studentName: userName
-    });
+    if (isProcessing) return; 
+    isProcessing = true;
+    socket.emit('submitAnswer', { roomCode, answerNumber: element.number || element.AtomicNumber, studentName: userName });
 }
 
-function resetTableColors() {
-    document.querySelectorAll('.element').forEach(el => {
-        el.classList.remove('correct', 'wrong', 'highlight-correct', 'completed');
-        if (difficulty === 'medium' && !el.innerHTML && !el.classList.contains('empty')) {
-            const elementData = elementsEasyMedium.find(e => parseInt(e.number) === parseInt(el.dataset.number));
-            if (elementData) {
-                el.className = `element droppable group-block-${elementData.group}`;
-                if (elementData.name === 'Hydrogen') {
-                    el.classList.add('hydrogen-block');
-                } else if (elementData.name === 'Helium') {
-                    el.classList.add('helium-block');
-                }
-            }
-        }
-    });
-}
-
-function launchConfetti() {
-    const duration = 3000;
-    const end = Date.now() + duration;
-    (function frame() {
-        confetti({
-            particleCount: 5,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 }
-        });
-        confetti({
-            particleCount: 5,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 }
-        });
-        if (Date.now() < end) {
-            requestAnimationFrame(frame);
-        }
-    })();
-}
-
-function updateScoreDisplay() {
-    document.getElementById('score-display').textContent = `🏆 Score: ${score}`;
-    document.getElementById('question-count').textContent = `${questionCount}/${maxQuestions}`;
-}
-
-function updateProgress() {
-    const progress = (questionCount / maxQuestions) * 100;
-    document.getElementById('progress').style.width = `${progress}%`;
-}
-
-function showEasyFeedback(isCorrect, element) {
-    Swal.fire({
-        title: isCorrect ? '' : '❌ Try Again!',
-        html: isCorrect ? 
-            `<img src="subi.gif" alt="Subi Animation" style="width: 100%; height: 100%; object-fit: contain; margin: 0;">` :
-            `You clicked: ${element.name} (${element.symbol}) ${element.number}`,
-        icon: isCorrect ? null : 'error',
-        timer: 3000,
-        showConfirmButton: false,
-        allowOutsideClick: !isCorrect,
-        customClass: {
-            popup: isCorrect ? 'swal-gif-popup' : ''
-        }
-    });
-}
-
-function showMediumFeedback(isCorrect, element) {
-    Swal.fire({
-        title: isCorrect ? '🎉 Correct!' : '❌ Try Again!',
-        html: isCorrect ? 
-            `+${100 + timeBonus} points!<br>${element.name} (${element.symbol})<br>Elements Placed: ${elementsPlaced}/10` :
-            `You dropped on: ${element.name} (${element.symbol}).`,
-        icon: isCorrect ? 'success' : 'error',
-        timer: 3500,
-        showConfirmButton: false,
-        allowOutsideClick: !isCorrect
-    });
-}
-
-function showHardFeedback(isCorrect, element) {
-    Swal.fire({
-        title: isCorrect ? '🎉 Correct!' : '❌ Try Again!',
-        html: isCorrect ? 
-            `+${100 + timeBonus} points!<br>${element.name} (${element.symbol})` :
-            `You clicked: ${element.name} (${element.symbol}) ${element.number}`,
-        icon: isCorrect ? 'success' : 'error',
-        timer: 3500,
-        showConfirmButton: false,
-        allowOutsideClick: !isCorrect
-    });
+function handleDrop(e) {
+    e.preventDefault();
+    if (isProcessing) return; 
+    isProcessing = true;
+    const droppedNumber = parseInt(e.dataTransfer.getData('text/plain'));
+    const targetElement = e.target.closest('.element');
+    if (!targetElement) { isProcessing = false; return; }
+    const targetNumber = parseInt(targetElement.dataset.number);
+    const draggedEl = document.querySelector(`#draggable-container .element[data-number="${droppedNumber}"]`);
+    if (draggedEl) draggedEl.style.visibility = 'hidden';
+    socket.emit('submitAnswer', { roomCode, answerNumber: droppedNumber, targetNumber, studentName: userName });
 }
 
 function showFeedback(isCorrect, element) {
-    switch (difficulty) {
-        case 'easy': showEasyFeedback(isCorrect, element); break;
-        case 'medium': showMediumFeedback(isCorrect, element); break;
-        case 'hard': showHardFeedback(isCorrect, element); break;
-    }
+    const elementName = element ? (element.name || element.Name) : 'Unknown Element';
+    Swal.fire({ title: isCorrect ? '🎉 Correct!' : '❌ Wrong!', html: isCorrect ? `+${100 + timeBonus} points!` : `You clicked: <strong>${elementName}</strong>`, timer: 1000, showConfirmButton: false });
 }
 
-function showLeaderboard(students) {
+// --- REVIEW LOGIC ---
+
+function endGame(students) {
     document.getElementById('game-area').style.display = 'none';
-    document.getElementById('leaderboard').style.display = 'block';
-    const tbody = document.getElementById('leaderboard-body');
-    tbody.innerHTML = '';
-    students.sort((a, b) => b.score - a.score).forEach((student, index) => {
-        const row = document.createElement('tr');
-        row.classList.add('leaderboard-row');
-        if ((userRole === 'student' || userRole === 'individual') && student.name === userName) {
-            row.classList.add('user-row');
-        }
-        const rankBadge = index < 3 ? `<span class="rank-badge rank-${index + 1}">${index + 1}</span>` : index + 1;
-        row.innerHTML = `<td>${rankBadge}</td><td>${student.name}</td><td>${student.score}</td>`;
-        tbody.appendChild(row);
-        row.classList.add('slide-in');
-        setTimeout(() => row.classList.remove('slide-in'), 500);
+    if (userRole === 'individual') launchConfetti();
+    showReviewScreen(students);
+}
+
+function showReviewScreen(students) {
+    const myData = students.find(s => s.name === userName);
+    
+    // --- DEBUG: Let's see exactly what we got ---
+    const debugString = JSON.stringify(students, null, 2);
+    console.log("[Debug] Raw students data:", debugString);
+    console.log("[Debug] My Data:", myData);
+    // -------------------------------------------
+
+    if (!myData) {
+        return Swal.fire("Error", "Could not find your data.", "error");
+    }
+
+    const history = myData.answerHistory || [];
+    console.log("[Debug] History length:", history.length);
+
+    const correctCount = history.filter(a => a.isCorrect).length;
+    const wrongCount = history.length - correctCount;
+
+    let tableRows = '';
+    if (history.length > 0) {
+        history.forEach((item, index) => {
+            const icon = item.isCorrect ? '✅' : '❌';
+            const rowClass = item.isCorrect ? 'review-correct' : 'review-wrong';
+            
+            tableRows += `
+                <tr class="${rowClass}">
+                    <td>${index + 1}</td>
+                    <td>${item.questionText}</td>
+                    <td><b>${item.correctAnswer}</b></td>
+                    <td><b>${item.userAnswer}</b></td>
+                    <td style="text-align:center; font-size: 1.2em;">${icon}</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableRows = '<tr><td colspan="5" class="text-center">No questions answered.</td></tr>';
+    }
+
+    const htmlContent = `
+        <div class="review-container">
+            <h3>📊 Detailed Performance Review</h3>
+            <div class="review-summary">
+                <div class="review-stat"><span class="label">Score:</span> <span class="value">${myData.score}</span></div>
+                <div class="review-stat"><span class="label">Correct:</span> <span class="value" style="color:green">${correctCount}</span></div>
+                <div class="review-stat"><span class="label">Wrong:</span> <span class="value" style="color:red">${wrongCount}</span></div>
+            </div>
+            
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-bordered table-striped review-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 35%">Question</th>
+                            <th style="width: 20%">Correct Answer</th>
+                            <th style="width: 20%">Your Answer</th>
+                            <th style="width: 10%">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- DEBUG SECTION -->
+            <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px; text-align: left; font-size: 10px;">
+                <strong>Debug Info (User: ${userName}):</strong><br>
+                History Length: ${history.length}<br>
+                Found MyData: ${!!myData}<br>
+                <textarea style="width:100%; height: 50px">${debugString}</textarea>
+            </div>
+            
+            <div class="mt-4">
+                ${userRole === 'individual' ? 
+                    `<button id="play-again-btn" class="btn modern-btn">Play Again</button> 
+                     <button id="go-home-btn" class="btn modern-btn" style="background: linear-gradient(45deg, #ef9a9a, #f44336);">Home</button>` :
+                    `<button id="close-review-btn" class="btn modern-btn">Close</button>`
+                }
+            </div>
+        </div>
+    `;
+
+    Swal.fire({
+        title: '<span style="font-size: 1.5rem">Quiz Complete!</span>',
+        html: htmlContent,
+        width: '90%',
+        showConfirmButton: false,
+        showCloseButton: false,
+        allowOutsideClick: false
     });
+
+    // Handle Button Clicks
+    setTimeout(() => {
+        const playAgainBtn = document.getElementById('play-again-btn');
+        const goHomeBtn = document.getElementById('go-home-btn');
+        const closeReviewBtn = document.getElementById('close-review-btn');
+
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('click', () => {
+                Swal.close();
+                score = 0; elementsPlaced = 0; correctlyPlacedNumbers.clear(); draggableElements = []; dropAttempts = 0; mediumModeFinished = false;
+                document.getElementById('game-area').style.display = 'block';
+                socket.emit('playIndividual', { studentName: 'Player', difficulty }, ({ success, quizId }) => { if(success) roomCode = quizId; });
+            });
+        }
+        if (goHomeBtn) {
+            goHomeBtn.addEventListener('click', () => {
+                Swal.close();
+                resetToRoleSelection();
+            });
+        }
+        if (closeReviewBtn) {
+            closeReviewBtn.addEventListener('click', () => {
+                Swal.close();
+                document.getElementById('leaderboard').style.display = 'block';
+            });
+        }
+    }, 100);
+}
+
+function updateScoreDisplay() { document.getElementById('score-display').textContent = `🏆 Score: ${score}`; document.getElementById('question-count').textContent = `${questionCount}/10`; }
+function updateProgress() { document.getElementById('progress').style.width = `${(questionCount/10)*100}%`; }
+function resetTableColors() { document.querySelectorAll('.element').forEach(e => e.classList.remove('correct', 'wrong')); }
+function launchConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
+function showDifficultyAlert() {
+    let text = difficulty === 'easy' ? 'Click the element.' : (difficulty === 'medium' ? 'Drag elements to correct spots.' : 'Identify by property.');
+    Swal.fire({ title: `${difficulty.toUpperCase()} Mode`, text, confirmButtonText: 'Start' });
 }
 
 function resetToRoleSelection() {
-    userRole = null;
-    roomCode = null;
-    userName = null;
-    score = 0;
-    questionCount = 0;
-    elementsPlaced = 0;
+    userRole = null; roomCode = null; userName = null; score = 0; questionCount = 0;
     document.getElementById('game-area').style.display = 'none';
     document.getElementById('teacher-controls').style.display = 'none';
     document.getElementById('teacher-leaderboard').style.display = 'none';
@@ -783,22 +441,6 @@ function resetToRoleSelection() {
     document.getElementById('individual-mode').style.display = 'none';
     document.getElementById('leaderboard').style.display = 'none';
     document.getElementById('role-selection').style.display = 'block';
-    updateScoreDisplay();
 }
 
-window.onload = async () => {
-    const elementsLoaded = await loadElements();
-    if (!elementsLoaded) return;
-    Swal.fire({
-        title: 'Periodic Table Challenge',
-        html: `Select a role to begin!<br>
-            <ul class="text-start">
-                <li><b>Teacher:</b> Create a room and manage the quiz</li>
-                <li><b>Student:</b> Join a room and answer questions</li>
-                <li><b>Individual Play:</b> Play the quiz on your own</li>
-            </ul>`,
-        confirmButtonText: 'Start!'
-    }).then(() => {
-        initGame();
-    });
-};
+window.onload = async () => { if(await loadElements()) initGame(); };
